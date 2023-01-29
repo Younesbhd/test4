@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo Análisis de emociones con IA</title>
+    <style>
+
+body {
+  background-color: #ffffff;
+}
+
+#videoElement {
+	width: 900px;
+	height: 350px;
+}
+  #start_over {
+      position: absolute;
+      background-color: #051094;
+      width: 150px;
+      height: 50px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      border: 2px solid 051094;
+      border-radius: 25px;
+      padding: 20px;
+  }
+
+  #start_over span {
+      position: absolute;
+      font-size: 20px;
+      color: white;
+      display: block;
+      display: flex;
+      justify-content: center;
+      text-align: center;
+      align-items: center;
+  }
+
+  #myProgress {
+      width: 820px;
+      background-color: gray;
+  }
+
+  #myBar {
+      width: 820px;
+      height: 25px;
+      background-color: green;
+  }
+
+  .wrapper {
+      position: relative;
+      width: 800px;
+      height: 400px;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      padding-top: 5%;
+  }
+
+  .charts {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      max-width: 100%;
+  }
+
+	.column {
+  	float: left;
+  	width: 50%;
+	}
+
+	/* Clear floats after the columns */
+	.row:after {
+  	content: "";
+  	display: table;
+	}
+  .titulo{
+    text-align: center;
+    padding-top: 1%;
+    padding-bottom: 2%;
+  }
+  
+  .atencion {
+    padding-left: 8%;
+    padding-top: 5%;
+    
+  }
+  .mostla{
+    display: flex;
+    justify-content: center;
+    padding-right: 15%;
+  }
+  .botonIniciar{
+    display: flex;
+    justify-content: center;
+    padding-right: 20%;
+    padding-top: 2%;
+  }
+  #imagen{
+    display: none;
+  }
+  .hide{
+    display: none;
+  }
+
+    </style>
+    <!-- configuration for the Alert plugin -->
+    <meta name="mphtools-feature" content="compatibilityUI, cameraPrivacyPopup, compatibilityAutoCheck">
+</head>
+<body>
+<!-- Hace que se recargue la página cada 3000 segundos (50 minutos)-->
+<META HTTP-EQUIV="Refresh" CONTENT="3000">
+<!-- include automatic alerts about browser and App compatibility -->
+<script src="https://sdk.morphcast.com/mphtools/v1.0/mphtools.js"></script>
+<!-- include MorphCast SDK -->
+<script src="https://ai-sdk.morphcast.com/v1.14/ai-sdk.js"></script>
+<!-- include radar chart -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<!-- include chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+
+<!-- elements of the page -->
+<div class="titulo">
+  <h1>Análisis de emociones con inteligencia artificial</h1>
+</div>
+<div class = "row">
+<div class = "column">
+<div>
+  <video autoplay="true" id="videoElement">
+  </video>
+</div>
+<div class>
+<div><b>Resultados</b></div>
+<div id="age">Edad estimada: -</div>
+<div id="gender">Sexo estimado: -</div>
+<div id="emotion">Emoción dominante: -</div>
+</div>
+<div class="atencion">
+<span>Nivel de atención:</span>
+<div id="myProgress">
+    <div id="myBar"></div>
+</div>
+<div class="wrapper">
+  <canvas class="charts" id="chartss"></canvas>
+</div>
+</div>
+</div>
+<div class = "column">
+  <div class = "derecha">
+    <span>Histograma de Emociones:</span>
+    <div id="chart"></div>
+  </div>
+  <div class="mostla">
+    <h1>Proyecto en desarrollo, realizado por Mostla</h1>
+  </div>
+  <div class="botonIniciar">
+  <div id="start_over">
+    <span>HAGA CLICK PARA EMPEZAR</span>
+  </div>
+  <div id="imagen">
+    <img src="./mostla.jpg" alt="tec">
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+  
+  // Complete code documentation of MorphCast AI SDK, here:
+  // https://ai-sdk.morphcast.com/latest/index.html
+
+  const initSDK = new Promise((res) => {
+    res(CY.loader()
+      .licenseKey("ea1bafe55e9ff550d213088aaad3dd39dd15120acedc")
+      .addModule(CY.modules().FACE_AGE.name)
+      .addModule(CY.modules().FACE_GENDER.name)
+      .addModule(CY.modules().FACE_ATTENTION.name)
+      .addModule(CY.modules().FACE_EMOTION.name)
+      .load());
+  });
+
+  
+  /*
+  Event listeners for MorphCast SDK output
+   */
+
+  window.addEventListener(CY.modules().FACE_AGE.eventName, (evt) => {
+    age_div.innerHTML = 'Edad estimada: ' + evt.detail.output.numericAge + ' años';
+  });
+
+  window.addEventListener(CY.modules().FACE_GENDER.eventName, (evt) => {
+    gen_div.innerHTML = 'Género estimado: ' + evt.detail.output.mostConfident;
+  });
+
+  window.addEventListener(CY.modules().FACE_EMOTION.eventName, (evt) => {
+    emo_div.innerHTML = 'Emoción dominante: ' + evt.detail.output.dominantEmotion;
+
+    
+    if(evt.detail.output.dominantEmotion == "Happy"){
+      document.getElementById("videoElement").style.backgroundcolor = "yellow";
+    } else if (evt.detail.output.dominantEmotion == "Neutral") {
+      document.getElementById("videoElement").style.background =  "gray";
+    } else if (evt.detail.output.dominantEmotion == "Angry") {
+      document.getElementById("videoElement").style.background =   "red";
+    } else if (evt.detail.output.dominantEmotion == "Surprise") {
+      document.getElementById("videoElement").style.background =  "orange";
+    } else if (evt.detail.output.dominantEmotion == "Fear") {
+      document.getElementById("videoElement").style.background =   "purple";
+    } else if (evt.detail.output.dominantEmotion == "Disgust") {
+      document.getElementById("videoElement").style.background =   "black";
+    } else {
+      document.getElementById("videoElement").style.background =  "blue";
+    } 
+
+    // data for the histogram
+    const emotions = evt.detail.output.emotion;
+    const labels = [];
+    const data = [];
+
+    Object.keys(emotions).forEach(k => {
+      labels.push(k);
+      data.push(parseInt((emotions[k] * 100).toFixed(0)));
+    });
+
+    chart.updateOptions({
+      labels: labels,
+      series:[{
+        name: 'Emotion',
+        data: data
+      }]
+    });
+  });
+
+  window.addEventListener(CY.modules().FACE_ATTENTION.eventName, (evt) => {
+    const attention = evt.detail.output.attention;
+
+    const elem = document.getElementById("myBar");
+    elem.style.width = attention * 100 + "%";
+  });
+
+  /*
+  Elements of the page
+   */
+
+  const startButton = document.querySelector("#start_over");
+  const imagen = document.querySelector("#imagen");
+
+  startButton.onclick = () => {
+    startButton.style.display = "none";
+    initSDK.then(({start}) => start());
+    imagen.style.display = "block";
+  };
+
+  const age_div = document.querySelector("#age");
+  const gen_div = document.querySelector("#gender");
+  const emo_div = document.querySelector("#emotion");
+
+  const options = {
+    chart: {
+      height: '600px',
+      width: '800px',
+      type: 'bar',
+      display: 'flex',
+      justify_content: 'center'
+    },
+    yaxis: {
+      min:0,
+      max:100
+    },
+    series:[],
+    title: {
+      text: ''
+    },
+    labels:[]
+  };
+
+  
+  const chart = new ApexCharts(document.querySelector("#chart"), options);
+  chart.render();
+
+</script>
+<script type="module">
+  // Complete code documentation of MorphCast AI SDK, here:
+  // https://ai-sdk.morphcast.com/latest/index.html
+
+  /*
+  Event listeners for MorphCast SDK output
+   */
+
+  import {EmoChart} from './emotion-chart.js';
+  const el = document.getElementById('chartss');
+
+  let startTime = Date.now();
+  let noDataTimeOut;
+
+  function updateNoData() {
+    chart.updateNoData(getCurrentTime());
+    noDataTimeOut = setTimeout(() => updateNoData(), 500);
+  }
+  function resetTimeout() {
+    clearTimeout(noDataTimeOut);
+    noDataTimeOut = setTimeout(() => updateNoData(), 500);
+  }
+  function getCurrentTime() {
+    return (Date.now() - startTime)/1000;
+  }
+
+  const charr = new EmoChart(el);
+  charr.visible = true;
+  charr.reset();
+  resetTimeout();
+  window.addEventListener(CY.modules().FACE_EMOTION.eventName, (evt) => {
+    resetTimeout();
+
+    // data for the histogram
+    charr.update(getCurrentTime(), evt.detail.output.emotion);
+  });
+
+  /*
+  Elements of the page
+   */
+
+var video = document.querySelector("#videoElement");
+
+if (navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function (stream) {
+      video.srcObject = stream;
+    })
+    .catch(function (err0r) {
+      console.log("Something went wrong!");
+    });
+}
+
+
+</script>
+</body>
+</html>
